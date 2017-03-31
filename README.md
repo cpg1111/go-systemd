@@ -10,6 +10,7 @@ Go bindings to systemd. The project has several packages:
 - `journal` - for writing to systemd's logging service, journald
 - `sdjournal` - for reading from journald by wrapping its C API
 - `machine1` - for registering machines/containers with systemd
+- `import1` - for importing/exporting machined images
 - `unit` - for (de)serialization and comparison of unit files
 
 ## Socket Activation
