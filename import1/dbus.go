@@ -88,10 +88,47 @@ func (c *Conn) transferImage(method string, args ...interface{}) (*Transfer, err
 	}, nil
 }
 
+// ImportTar sends a dbus request to import a tar ball of a machine image
 func (c *Conn) ImportTar(fd int, localName string, force, readOnly bool) (*Transfer, error) {
-	return c.importImage("ImportTar", fd, localName, force, readOnly)
+	return c.transferImage("ImportTar", fd, localName, force, readOnly)
 }
 
+// ImportRaw sends a dbus request to import a raw machine image
 func (c *Conn) ImportRaw(fd int, localName string, force, readOnly bool) (*Transfer, error) {
-	return c.importImage("ImportRaw", fd, localName, force, readOnly)
+	return c.transferImage("ImportRaw", fd, localName, force, readOnly)
+}
+
+// ExportTar sends a dbus request to export a tar ball of a machine image
+func (c *Conn) ExportTar(localName string, fd int, format string) (*Transfer, error) {
+	return c.transferImage("ExportTar", localName, fd, format)
+}
+
+// ExportRaw sends a dbus request to export a raw machine image
+func (c *Conn) ExportRaw(localName string, fd int, format string) (*Transfer, error) {
+	return c.transferImage("ExportRaw", localName, fd, format)
+}
+
+// PullTar sends a dbus request to pull a tar ball of a machine image
+func (c *Conn) PullTar(url, localName, verifyMode string, force bool) (*Transfer, error) {
+	return c.transferImage("PullTar", url, localName, verifyMode, force)
+}
+
+// PullRaw sends a dbus request to pull a raw machine image
+func (c *Conn) PullRaw(url, localName, verifyMode string, force bool) (*Transfer, error) {
+	return c.transferImage("PullRaw", url, localName, verifyMode, force)
+}
+
+// ListTransfers gets the list of all current image transfers
+func (c *Conn) ListTransfers() ([]interface{}, error) {
+	result := c.object.Call(dbusInterface+".ListTransfers", 0)
+	if result.Err != nil {
+		return nil, result.Err
+	}
+	return result.Body, nil
+}
+
+// CancelTransfer cancels an ongoing transfer
+func (c *Conn) CancelTransfer(transferID uint) error {
+	result := c.object.Call(dbusInterface+".CancelTransfer", 0, transferID)
+	return result.Err
 }
