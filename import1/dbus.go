@@ -19,6 +19,8 @@ package import1
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/godbus/dbus"
 )
@@ -43,7 +45,7 @@ func New() (*Conn, error) {
 	if err := c.initConnection(); err != nil {
 		return nil, err
 	}
-	return c
+	return c, nil
 }
 
 func (c *Conn) initConnection() error {
@@ -58,21 +60,26 @@ func (c *Conn) initConnection() error {
 		c.conn.Close()
 		return err
 	}
+	err = c.conn.Hello()
+	if err != nil {
+		c.conn.Close()
+		return err
+	}
 	c.object = c.conn.Object("org.freedesktop.import1", dbus.ObjectPath(dbusPath))
 	return nil
 }
 
-func (c *Conn) importImage(method string, args ...interface{}) (*Transfer, error) {
+func (c *Conn) transferImage(method string, args ...interface{}) (*Transfer, error) {
 	result := c.object.Call(fmt.Sprintf("%s.%s", dbusInterface, method), 0, args...)
 	if result.Err != nil {
 		return nil, result.Err
 	}
-	transferID, err := result.body[0].(uint)
-	if err != nil {
+	transferID, ok := result.Body[0].(uint)
+	if !ok {
 		return nil, fmt.Errorf("unable to convert dbus response '%v' to uint", result.Body[0])
 	}
-	transferPath, err := result.body[1].(dbus.ObjectPath)
-	if err != nil {
+	transferPath, ok := result.Body[1].(dbus.ObjectPath)
+	if !ok {
 		return nil, fmt.Errorf("unable to convert dbus response '%v' to dbus.ObjectPath", result.Body[1])
 	}
 	return &Transfer{
